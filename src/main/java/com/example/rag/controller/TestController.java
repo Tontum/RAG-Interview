@@ -37,4 +37,17 @@ public class TestController {
                 .stream()
                 .content();
     }
+    
+    /**
+     * 流式输出 (JSON数组，调试用)
+     */
+    @GetMapping(value = "/test/ai/stream/json")
+    public Flux<String> testAiStreamJson(@RequestParam(defaultValue = "你好，请简单介绍一下自己") String message) {
+        ChatClient chatClient = chatClientBuilder.build();
+        return chatClient.prompt()
+                .user(message)
+                .stream()
+                .content()
+                .map(chunk -> "{\"content\":\"" + chunk.replace("\"", "\\\"") + "\"}");
+    }
 }
