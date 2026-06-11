@@ -29,7 +29,7 @@ public class TestController {
     /**
      * 流式输出 (SSE)
      */
-    @GetMapping(value = "/test/ai/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/test/ai/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE + ";charset=UTF-8")
     public Flux<String> testAiStream(@RequestParam(defaultValue = "你好，请简单介绍一下自己") String message) {
         ChatClient chatClient = chatClientBuilder.build();
         return chatClient.prompt()
