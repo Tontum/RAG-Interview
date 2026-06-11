@@ -16,14 +16,14 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-# Spring AI 配置
+# Spring AI 配置 (小米大模型)
 spring.ai:
   openai:
-    api-key: ${AI_API_KEY}
-    base-url: ${AI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    api-key: ${AI_API_KEY:tp-cnui0166lsgxj0ihitpf8hibv6ae3823tsvej9l0w0tub7bx}
+    base-url: https://token-plan-cn.xiaomimimo.com/v1
     chat:
       options:
-        model: ${AI_MODEL:qwen-plus}
+        model: mimo-v2.5-pro
     embedding:
       options:
         model: ${EMBEDDING_MODEL:text-embedding-v3}
