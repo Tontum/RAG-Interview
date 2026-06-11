@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: RAG-Interview
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rag_db
+    username: postgres
+    password: ${DB_PASSWORD:your_password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Spring AI 配置
+spring.ai:
+  openai:
+    api-key: ${AI_API_KEY}
+    base-url: ${AI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    chat:
+      options:
+        model: ${AI_MODEL:qwen-plus}
+    embedding:
+      options:
+        model: ${EMBEDDING_MODEL:text-embedding-v3}
+        dimensions: 1024
+
+# 自定义配置
+rag:
+  chunk-size: 800
+  chunk-overlap: 0
+  top-k: 8
+  min-score: 0.28
+
+server:
+  port: 8080
