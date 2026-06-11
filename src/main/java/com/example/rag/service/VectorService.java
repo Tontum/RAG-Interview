@@ -49,20 +49,22 @@ public class VectorService {
         log.info("文本分块完成: {} 个chunks", chunks.size());
         
         // 3. 为每个 chunk 添加 metadata（知识库ID）
-        chunks.forEach(chunk -> {
-            Map<String, Object> metadata = new HashMap<>(chunk.getMetadata());
-            metadata.put("kb_id", knowledgeBaseId.toString());
-            chunk.setMetadata(metadata);
-        });
+        List<Document> documentsWithMetadata = chunks.stream()
+            .map(chunk -> {
+                Map<String, Object> metadata = new HashMap<>(chunk.getMetadata());
+                metadata.put("kb_id", knowledgeBaseId.toString());
+                return new Document(chunk.getText(), metadata);
+            })
+            .collect(Collectors.toList());
         
         // 4. 分批向量化并存储
         int batchSize = 10;
-        for (int i = 0; i < chunks.size(); i += batchSize) {
-            List<Document> batch = chunks.subList(i, Math.min(i + batchSize, chunks.size()));
+        for (int i = 0; i < documentsWithMetadata.size(); i += batchSize) {
+            List<Document> batch = documentsWithMetadata.subList(i, Math.min(i + batchSize, documentsWithMetadata.size()));
             vectorStore.add(batch);
         }
         
-        log.info("知识库向量化完成: kbId={}, chunks={}", knowledgeBaseId, chunks.size());
+        log.info("知识库向量化完成: kbId={}, chunks={}", knowledgeBaseId, documentsWithMetadata.size());
     }
     
     /**

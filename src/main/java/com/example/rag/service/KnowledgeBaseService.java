@@ -1,6 +1,7 @@
 package com.example.rag.service;
 
 import com.example.rag.entity.KnowledgeBaseEntity;
+import com.example.rag.entity.VectorStatus;
 import com.example.rag.repository.KnowledgeBaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,16 +45,16 @@ public class KnowledgeBaseService {
         entity.setOriginalFilename(file.getOriginalFilename());
         entity.setFileSize(file.getSize());
         entity.setContentType(file.getContentType());
-        entity.setVectorStatus(KnowledgeBaseEntity.VectorStatus.PENDING);
+        entity.setVectorStatus(VectorStatus.PENDING);
         
         entity = knowledgeBaseRepository.save(entity);
         
         // 4. 异步向量化（这里简化为同步）
         try {
             vectorService.vectorizeAndStore(entity.getId(), content);
-            entity.setVectorStatus(KnowledgeBaseEntity.VectorStatus.COMPLETED);
+            entity.setVectorStatus(VectorStatus.COMPLETED);
         } catch (Exception e) {
-            entity.setVectorStatus(KnowledgeBaseEntity.VectorStatus.FAILED);
+            entity.setVectorStatus(VectorStatus.FAILED);
             entity.setVectorError(e.getMessage());
         }
         
