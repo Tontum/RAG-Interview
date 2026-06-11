@@ -25,7 +25,7 @@ public class FileParseService {
             String content = tika.parseToString(inputStream);
             log.info("文件解析完成: {}, 文本长度: {}", file.getOriginalFilename(), content.length());
             return content;
-        } catch (IOException e) {
+        } catch (IOException | org.apache.tika.exception.TikaException e) {
             log.error("文件解析失败: {}", file.getOriginalFilename(), e);
             throw new RuntimeException("文件解析失败: " + e.getMessage());
         }
