@@ -241,6 +241,21 @@
             color: #ef4444;
         }
         
+        .btn-reprocess {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-reprocess:hover {
+            background: #d97706;
+        }
+        
         .chat-header {
             padding-bottom: 16px;
             border-bottom: 1px solid #eee;
@@ -617,6 +632,7 @@
                     <input type="checkbox" 
                            id="kb-${kb.id}" 
                            value="${kb.id}"
+                           ${kb.vectorStatus === 'COMPLETED' ? '' : 'disabled'}
                            ${selectedKBIds.includes(kb.id) ? 'checked' : ''}
                            onchange="toggleKB(${kb.id})">
                     <div class="kb-item-info">
@@ -625,6 +641,9 @@
                             <span class="status-${kb.vectorStatus.toLowerCase()}">${getStatusText(kb.vectorStatus)}</span>
                         </div>
                     </div>
+                    ${kb.vectorStatus === 'FAILED' ? `
+                        <button class="btn-reprocess" onclick="reprocessKB(${kb.id}, '${kb.name}')">重新处理</button>
+                    ` : ''}
                 </div>
             `).join('');
         }
@@ -637,6 +656,40 @@
                 'FAILED': '✗ 失败'
             };
             return statusMap[status] || status;
+        }
+        
+        // 重新处理知识库
+        async function reprocessKB(id, name) {
+            // 创建文件选择器
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf,.doc,.docx,.txt,.md';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                try {
+                    showToast('重新处理中...');
+                    const response = await fetch(`/api/knowledgebase/${id}/reprocess`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        showToast('重新处理成功！');
+                        loadKnowledgeBases();
+                    } else {
+                        const error = await response.json();
+                        showToast('重新处理失败：' + (error.error || '未知错误'), 'error');
+                    }
+                } catch (error) {
+                    showToast('重新处理失败：' + error.message, 'error');
+                }
+            };
+            input.click();
         }
         
         // 切换知识库选择

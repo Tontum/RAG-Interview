@@ -1,5 +1,6 @@
 package com.example.rag.service;
 
+import com.example.rag.repository.VectorRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -23,9 +24,11 @@ public class VectorService {
     
     private final VectorStore vectorStore;
     private final TokenTextSplitter textSplitter;
+    private final VectorRepository vectorRepository;
     
-    public VectorService(VectorStore vectorStore) {
+    public VectorService(VectorStore vectorStore, VectorRepository vectorRepository) {
         this.vectorStore = vectorStore;
+        this.vectorRepository = vectorRepository;
         // 默认配置：每个 chunk 约 800 tokens
         this.textSplitter = TokenTextSplitter.builder()
             .withChunkSize(800)
@@ -102,7 +105,8 @@ public class VectorService {
      * 删除指定知识库的向量数据
      */
     public void deleteByKnowledgeBaseId(Long knowledgeBaseId) {
-        // 这里调用 VectorRepository 或直接使用 JdbcTemplate
-        // 详见 VectorRepository.java
+        log.info("删除知识库向量数据: kbId={}", knowledgeBaseId);
+        int deleted = vectorRepository.deleteByKnowledgeBaseId(knowledgeBaseId);
+        log.info("删除完成: kbId={}, 删除数量={}", knowledgeBaseId, deleted);
     }
 }

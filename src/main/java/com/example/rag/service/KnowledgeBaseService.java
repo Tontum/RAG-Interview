@@ -34,6 +34,14 @@ public class KnowledgeBaseService {
     }
     
     /**
+     * 根据ID查询知识库
+     */
+    public KnowledgeBaseEntity findById(Long id) {
+        return knowledgeBaseRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("知识库不存在: " + id));
+    }
+    
+    /**
      * 上传知识库（幂等：重复文件返回已有记录）
      */
     @Transactional
@@ -69,6 +77,51 @@ public class KnowledgeBaseService {
             vectorService.vectorizeAndStore(entity.getId(), content);
             entity.setVectorStatus(VectorStatus.COMPLETED);
         } catch (Exception e) {
+            entity.setVectorStatus(VectorStatus.FAILED);
+            entity.setVectorError(e.getMessage());
+        }
+        
+        return knowledgeBaseRepository.save(entity);
+    }
+    
+    /**
+     * 重新处理知识库（向量化）
+     * 注意：需要重新上传文件内容，这里只是重置状态
+     */
+    @Transactional
+    public KnowledgeBaseEntity reprocess(Long id) {
+        KnowledgeBaseEntity entity = findById(id);
+        
+        // 重置状态为PENDING
+        entity.setVectorStatus(VectorStatus.PENDING);
+        entity.setVectorError(null);
+        entity.setChunkCount(0);
+        
+        return knowledgeBaseRepository.save(entity);
+    }
+    
+    /**
+     * 重新处理知识库（带文件内容）
+     */
+    @Transactional
+    public KnowledgeBaseEntity reprocessWithContent(Long id, String content) {
+        KnowledgeBaseEntity entity = findById(id);
+        
+        // 更新状态为PROCESSING
+        entity.setVectorStatus(VectorStatus.PROCESSING);
+        entity.setVectorError(null);
+        entity = knowledgeBaseRepository.save(entity);
+        
+        try {
+            // 删除旧向量数据
+            vectorService.deleteByKnowledgeBaseId(id);
+            
+            // 重新向量化
+            vectorService.vectorizeAndStore(id, content);
+            entity.setVectorStatus(VectorStatus.COMPLETED);
+            entity.setChunkCount(1); // 简化处理
+        } catch (Exception e) {
+            log.error("重新处理失败: {}", id, e);
             entity.setVectorStatus(VectorStatus.FAILED);
             entity.setVectorError(e.getMessage());
         }
