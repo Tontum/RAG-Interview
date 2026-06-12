@@ -10,8 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 知识库管理服务
@@ -26,17 +27,31 @@ public class KnowledgeBaseService {
     private final VectorService vectorService;
     
     /**
-     * 上传知识库
+     * 查询所有知识库
+     */
+    public List<KnowledgeBaseEntity> listAll() {
+        return knowledgeBaseRepository.findAll();
+    }
+    
+    /**
+     * 上传知识库（幂等：重复文件返回已有记录）
      */
     @Transactional
     public KnowledgeBaseEntity upload(MultipartFile file, String name, String category) {
-        // 1. 解析文件
-        String content = fileParseService.parseFile(file);
-        
-        // 2. 计算文件哈希
+        // 1. 计算文件哈希
         String fileHash = calculateHash(file);
         
-        // 3. 保存到数据库
+        // 2. 检查是否已存在
+        Optional<KnowledgeBaseEntity> existing = knowledgeBaseRepository.findByFileHash(fileHash);
+        if (existing.isPresent()) {
+            log.info("文件已存在，返回已有记录: {}", existing.get().getName());
+            return existing.get();
+        }
+        
+        // 3. 解析文件
+        String content = fileParseService.parseFile(file);
+        
+        // 4. 保存到数据库
         KnowledgeBaseEntity entity = new KnowledgeBaseEntity();
         entity.setUserId(1L); // TODO: 从 Session 获取
         entity.setFileHash(fileHash);
@@ -49,7 +64,7 @@ public class KnowledgeBaseService {
         
         entity = knowledgeBaseRepository.save(entity);
         
-        // 4. 异步向量化（这里简化为同步）
+        // 5. 异步向量化（这里简化为同步）
         try {
             vectorService.vectorizeAndStore(entity.getId(), content);
             entity.setVectorStatus(VectorStatus.COMPLETED);

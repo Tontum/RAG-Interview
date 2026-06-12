@@ -561,7 +561,13 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    showToast('上传成功！');
+                    // 检查是否是已存在的记录
+                    const existingIds = knowledgeBases.map(kb => kb.id);
+                    if (existingIds.includes(data.id)) {
+                        showToast('文件已存在，返回已有记录');
+                    } else {
+                        showToast('上传成功！');
+                    }
                     loadKnowledgeBases();
                     // 重置
                     fileInput.value = '';
@@ -580,14 +586,19 @@
         
         // 加载知识库列表
         async function loadKnowledgeBases() {
-            // 由于没有列表接口，我们使用模拟数据
-            // 实际项目中应该调用 GET /api/knowledgebase/list
             kbList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">加载中...</div>';
             
-            // 模拟加载
-            setTimeout(() => {
-                renderKBList();
-            }, 500);
+            try {
+                const response = await fetch('/api/knowledgebase/list');
+                if (response.ok) {
+                    knowledgeBases = await response.json();
+                    renderKBList();
+                } else {
+                    kbList.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">加载失败</div>';
+                }
+            } catch (error) {
+                kbList.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">加载失败</div>';
+            }
         }
         
         // 渲染知识库列表
@@ -611,7 +622,7 @@
                     <div class="kb-item-info">
                         <div class="kb-item-name">${kb.name}</div>
                         <div class="kb-item-status">
-                            <span class="status-${kb.status}">${getStatusText(kb.status)}</span>
+                            <span class="status-${kb.vectorStatus.toLowerCase()}">${getStatusText(kb.vectorStatus)}</span>
                         </div>
                     </div>
                 </div>
@@ -620,9 +631,10 @@
         
         function getStatusText(status) {
             const statusMap = {
-                'completed': '✓ 已就绪',
-                'pending': '⏳ 处理中',
-                'failed': '✗ 失败'
+                'COMPLETED': '✓ 已就绪',
+                'PENDING': '⏳ 处理中',
+                'PROCESSING': '⏳ 处理中',
+                'FAILED': '✗ 失败'
             };
             return statusMap[status] || status;
         }

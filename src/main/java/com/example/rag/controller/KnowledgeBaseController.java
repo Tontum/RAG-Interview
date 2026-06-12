@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 /**
  * 知识库管理Controller
  */
@@ -16,6 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class KnowledgeBaseController {
     
     private final KnowledgeBaseService knowledgeBaseService;
+    
+    /**
+     * 查询知识库列表
+     */
+    @GetMapping("/list")
+    public ResponseEntity<List<KnowledgeBaseEntity>> list() {
+        return ResponseEntity.ok(knowledgeBaseService.listAll());
+    }
     
     /**
      * 上传知识库
