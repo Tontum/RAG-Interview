@@ -28,6 +28,10 @@ spring.ai:
       options:
         model: text-embedding-v3
         dimensions: 1024
+  vectorstore:
+    pgvector:
+      initialize-schema: true
+      dimensions: 1024
 
 # 自定义配置
 rag:

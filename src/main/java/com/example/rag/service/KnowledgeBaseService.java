@@ -103,7 +103,6 @@ public class KnowledgeBaseService {
     /**
      * 重新处理知识库（带文件内容）
      */
-    @Transactional
     public KnowledgeBaseEntity reprocessWithContent(Long id, String content) {
         KnowledgeBaseEntity entity = findById(id);
         
